@@ -1,0 +1,93 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 1154 >>
+stream
+BT
+/F1 20 Tf
+1 0 0 1 72 710 Tm
+(Try Reading This Aloud) Tj
+/F1 10 Tf
+1 0 0 1 72 684 Tm
+(This short document exists so you can try Speechify without needing a PDF) Tj
+1 0 0 1 72 670 Tm
+(of your own. Press play below, and the sentence being read is highlighted) Tj
+1 0 0 1 72 656 Tm
+(here on the page, with the exact word inside it marked as it goes.) Tj
+/F1 13 Tf
+1 0 0 1 72 628 Tm
+(Jump to any sentence) Tj
+/F1 10 Tf
+1 0 0 1 72 608 Tm
+(Tap a sentence anywhere on this page and reading starts there immediately,) Tj
+1 0 0 1 72 594 Tm
+(whether it is the heading above, the middle of this paragraph, or the very) Tj
+1 0 0 1 72 580 Tm
+(last line below. Nothing in between gets replayed.) Tj
+/F1 13 Tf
+1 0 0 1 72 552 Tm
+(Adjust the voice and speed) Tj
+/F1 10 Tf
+1 0 0 1 72 532 Tm
+(Open the settings panel to change the voice or the reading rate. Both) Tj
+1 0 0 1 72 518 Tm
+(take effect starting with the next sentence, so a change made) Tj
+1 0 0 1 72 504 Tm
+(mid-sentence finishes that one first.) Tj
+1 0 0 1 72 480 Tm
+(This document continues onto a second page, so scrolling and multi-page) Tj
+1 0 0 1 72 466 Tm
+(playback both have something to show.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 430 >>
+stream
+BT
+/F1 20 Tf
+1 0 0 1 72 710 Tm
+(Page Two) Tj
+/F1 10 Tf
+1 0 0 1 72 684 Tm
+(Reading carries on across the page break without a pause you would) Tj
+1 0 0 1 72 670 Tm
+(notice. Whatever page contains the sentence currently being read) Tj
+1 0 0 1 72 656 Tm
+(scrolls into view automatically.) Tj
+1 0 0 1 72 632 Tm
+(That is the whole tour. Open a PDF of your own from the button above) Tj
+1 0 0 1 72 618 Tm
+(whenever you are ready.) Tj
+ET
+endstream
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000344 00000 n 
+0000001550 00000 n 
+0000001676 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+2157
+%%EOF

@@ -22,6 +22,7 @@ const COPIES = [
   ['index.html', 'web/index.html'],
   ['mobile.css', 'web/mobile.css'],
   ['app.js', 'web/app.js'],
+  ['sample.pdf', 'web/sample.pdf'],
   ['core', 'src/core'],
   ['speech', 'src/speech'],
   ['viewer', 'src/viewer'],

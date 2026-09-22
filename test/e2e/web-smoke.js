@@ -103,6 +103,21 @@ async function run(win) {
   check('a viewport meta tag is present', /width=device-width/.test(boot.viewportMeta), boot.viewportMeta);
   check('the status bar invites a file', /Pick a PDF/.test(boot.status), boot.status);
 
+  // The bundled sample PDF must be reachable and open through the same path
+  // a picked file would.
+  const sample = await contents.executeJavaScript(`(async () => {
+    document.getElementById('sample').click();
+    await new Promise((r) => setTimeout(r, 2500));
+    return {
+      title: document.getElementById('doc-title').textContent,
+      status: document.getElementById('status').textContent,
+      highlights: document.querySelectorAll('.highlight-sentence').length,
+    };
+  })()`);
+  check('the sample PDF loads via the button', sample.title === 'sample.pdf', sample.title);
+  check('the sample PDF has readable text', /Sentence 1 of 15/.test(sample.status), sample.status);
+  check('the sample PDF highlights its first sentence', sample.highlights >= 1);
+
   // Hand the file input a real File, the way a picker would.
   const bytes = await readFile(FIXTURE);
   const opened = await contents.executeJavaScript(`(async () => {

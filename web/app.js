@@ -29,7 +29,7 @@ const STORAGE_KEY = 'speechify.settings';
 const el = (id) => document.getElementById(id);
 const ui = Object.fromEntries(
   [
-    'viewer', 'empty-state', 'file', 'file2', 'doc-title', 'settings', 'settings-toggle',
+    'viewer', 'empty-state', 'file', 'file2', 'sample', 'doc-title', 'settings', 'settings-toggle',
     'play', 'play-icon', 'play-label', 'next', 'previous', 'voice', 'rate', 'rate-value',
     'zoom-in', 'zoom-out', 'zoom-fit', 'status', 'support',
   ].map((id) => [id.replace(/-(\w)/g, (_, c) => c.toUpperCase()), el(id)])
@@ -317,6 +317,20 @@ for (const input of [ui.file, ui.file2]) {
     event.target.value = ''; // so picking the same file twice still fires
   });
 }
+
+/** Fetch the bundled demo PDF and open it exactly as a picked file would be. */
+async function loadSample() {
+  try {
+    const response = await fetch('./sample.pdf');
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    const blob = await response.blob();
+    await openFile(new File([blob], 'sample.pdf', { type: 'application/pdf' }));
+  } catch (error) {
+    console.error(error);
+    setStatus('Could not load the sample PDF.', 'error');
+  }
+}
+ui.sample.addEventListener('click', loadSample);
 
 ui.play.addEventListener('click', () => reader.toggle());
 ui.next.addEventListener('click', () => reader.next());
