@@ -1,0 +1,356 @@
+/* Speechify — a dark reading surface with a light page, so the eye goes to the
+   document and the highlight is the brightest thing on screen. */
+
+:root {
+  --bg: #14161a;
+  --bg-raised: #1c2027;
+  --border: #2a3039;
+  --text: #e6e9ef;
+  --text-dim: #9aa3b2;
+  --accent: #5b8cff;
+  --accent-strong: #3d6fe8;
+
+  /* The two highlight layers. The sentence is a calm wash; the word is a
+     brighter mark that rides on top of it. */
+  --highlight-sentence: rgba(91, 140, 255, 0.22);
+  --highlight-sentence-edge: rgba(91, 140, 255, 0.45);
+  --highlight-word: rgba(255, 196, 61, 0.62);
+  --highlight-word-edge: rgba(214, 150, 20, 0.5);
+
+  --toolbar-height: 56px;
+  --statusbar-height: 28px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #eef0f4;
+    --bg-raised: #ffffff;
+    --border: #d5d9e0;
+    --text: #1a1d23;
+    --text-dim: #5e6674;
+    --highlight-sentence: rgba(61, 111, 232, 0.16);
+    --highlight-sentence-edge: rgba(61, 111, 232, 0.4);
+    --highlight-word: rgba(255, 190, 36, 0.62);
+    --highlight-word-edge: rgba(198, 133, 8, 0.45);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  grid-template-rows: var(--toolbar-height) 1fr var(--statusbar-height);
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* -- toolbar ------------------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 14px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.toolbar-group.transport {
+  margin-inline: auto;
+}
+
+.doc-title {
+  max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.button.primary {
+  min-width: 92px;
+  justify-content: center;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: #fff;
+}
+
+.button.primary:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.button.large {
+  padding: 10px 22px;
+  font-size: 14px;
+}
+
+.icon-button {
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.field-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.select {
+  max-width: 190px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.slider {
+  width: 132px;
+  accent-color: var(--accent);
+}
+
+.zoom {
+  display: flex;
+  gap: 4px;
+}
+
+/* -- viewer -------------------------------------------------------------- */
+
+.viewer {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  scroll-behavior: auto;
+}
+
+.viewer:focus-visible {
+  outline: none;
+}
+
+.page {
+  position: relative;
+  flex: none;
+  background: #fff;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+
+.page-canvas {
+  display: block;
+}
+
+/* Until a page is rasterised it shows as a blank sheet rather than a gap. */
+.page:not(.is-rendered)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    #fff 0 22px,
+    #f4f4f6 22px 23px
+  );
+}
+
+.page-label {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(20, 22, 26, 0.55);
+  color: #fff;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.highlight-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.highlight {
+  position: absolute;
+  border-radius: 3px;
+}
+
+.highlight-sentence {
+  background: var(--highlight-sentence);
+  box-shadow: inset 0 0 0 1px var(--highlight-sentence-edge);
+  /* The sentence box moves between sentences; easing it stops the jump from
+     reading as a flicker. */
+  transition: opacity 90ms linear;
+}
+
+/* Translucent rather than blended: the highlight layer is its own stacking
+   context, so a blend mode here would composite against the layer instead of
+   against the page underneath and wash out to nothing. */
+.highlight-word {
+  background: var(--highlight-word);
+  box-shadow: 0 0 0 1px var(--highlight-word-edge);
+}
+
+/* -- empty state --------------------------------------------------------- */
+
+.empty-state {
+  margin: auto;
+  max-width: 460px;
+  padding: 32px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.empty-state h1 {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.empty-state p {
+  margin: 0 0 18px;
+}
+
+.empty-state .hint {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.shortcuts {
+  display: grid;
+  gap: 6px;
+  margin: 26px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.shortcuts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.shortcuts dt {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.shortcuts dd {
+  margin: 0;
+}
+
+/* -- status bar ---------------------------------------------------------- */
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.status.is-error {
+  color: #ff8b7a;
+}
+
+.status.is-warning {
+  color: #ffc747;
+}
+
+.progress {
+  font-variant-numeric: tabular-nums;
+}
+
+.page-indicator {
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- drop target --------------------------------------------------------- */
+
+.drop-overlay {
+  position: fixed;
+  inset: var(--toolbar-height) 0 var(--statusbar-height) 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  border: 2px dashed var(--accent);
+  color: var(--text);
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.drop-overlay[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlight-sentence {
+    transition: none;
+  }
+}

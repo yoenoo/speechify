@@ -1,1 +1,123 @@
-# speechify
+# Speechify
+
+A desktop app that reads a PDF out loud and highlights what it is saying — the
+current sentence as a wash, and the word being spoken as a marker inside it.
+
+Built with Electron, [pdf.js](https://mozilla.github.io/pdf.js/) for rendering
+and text extraction, and the platform's own speech synthesiser for the voice.
+
+![the reader highlighting a sentence and the word being spoken](docs/reading.png)
+
+## Running it
+
+```sh
+npm install
+npm start
+```
+
+Open a PDF with **Ctrl/Cmd+O**, by dropping a file onto the window, or by
+passing a path: `npm start -- path/to/file.pdf`.
+
+| | |
+|---|---|
+| **Space** | play / pause |
+| **Click a sentence** | start reading from there |
+| **← →** | previous / next sentence |
+| **Esc** | stop |
+| **Ctrl/Cmd + [ ]** | slower / faster |
+| **Ctrl/Cmd + − +** | zoom out / in |
+| **Ctrl/Cmd + 0 / 9** | fit width / fit page |
+
+### Voices
+
+The app speaks through whatever voices the operating system provides — SAPI on
+Windows, `NSSpeechSynthesizer` on macOS, speech-dispatcher on Linux. macOS and
+Windows ship usable voices out of the box. On Linux you may need to install
+them:
+
+```sh
+sudo apt install speech-dispatcher espeak-ng   # or a nicer backend, e.g. piper
+```
+
+If no voices are found the app says so in the status bar and the play button
+stays disabled — the document still opens and can be read on screen.
+
+## How it works
+
+Reading a PDF aloud *and* tracking the reading position means solving three
+problems that pdf.js leaves to the caller.
+
+**1. Recovering prose from a page.** `getTextContent()` returns text in
+content-stream order, split wherever the PDF happened to split it — mid-word
+for kerning, mid-line for a font change. `src/core/text-model.js` regroups
+those fragments into visual lines, then decides what separates each line from
+the next: a space for a wrapped sentence, nothing for a word hyphenated across
+a break, or a hard break for a heading, a bullet or a new paragraph. That last
+decision uses the geometry (line spacing, a change of font size, a line that
+stops well short of the measure) because punctuation alone cannot tell a
+heading from the sentence beneath it.
+
+**2. Choosing what to speak.** Units are sentences, from `Intl.Segmenter`, with
+two corrections: splits caused by abbreviations and initials — `Dr.`, `et al.`,
+`Fig. 2`, `A. Researcher` — are stitched back together, and very long sentences
+are broken at clause boundaries so an utterance stays short enough to start
+promptly and cheap enough to restart.
+
+**3. Mapping characters back to the page.** Every character of the extracted
+text keeps a link to the text item it came from, so any character range can be
+turned into rectangles and merged into one box per line. Sub-ranges are
+measured with a table of glyph advances rather than by character count, which
+is what keeps the word marker on the word instead of drifting across it.
+
+With that in place the playback loop is small: the reader hands the synthesiser
+one sentence at a time (plus one queued ahead, so there is no gap between
+them), and the engine's `start` and `boundary` events say which sentence and
+which character are being spoken right now. Those turn straight back into
+rectangles.
+
+### Layout
+
+```
+electron/
+  main.js              window, menu, file access, preferences
+  preload.cjs          the context bridge — the renderer's entire authority
+  bundle-protocol.js   serves the renderer over app:// under a strict CSP
+src/
+  core/                pure logic, no DOM: text model and geometry
+  viewer/              pdf-document.js (loading), page-view.js (rendering)
+  speech/              reader.js (playback state), web-speech-engine.js
+  ui/app.js            wiring and the toolbar
+test/
+  *.test.mjs           unit tests over generated PDF fixtures
+  e2e/smoke.js         boots the real app and drives it end to end
+```
+
+The renderer is sandboxed with no Node integration and reaches the main process
+only through the handful of named operations in `preload.cjs`. It never touches
+the filesystem: `main.js` reads the PDF and passes the bytes across.
+
+### Known limits
+
+- **Scanned PDFs have no text to read.** The page renders and the app says so,
+  but read-aloud needs OCR, which is out of scope here.
+- **Changing voice or speed restarts the current sentence.** Those settings are
+  fixed when an utterance is created, so they cannot take effect mid-sentence.
+- **Word highlighting depends on `boundary` events.** Engines that do not emit
+  them still get sentence highlighting, which is the load-bearing cue.
+- **Multi-column layouts are read in pdf.js's order**, which is usually but not
+  always column order.
+
+## Development
+
+```sh
+npm test         # unit tests (node --test)
+npm run test:e2e # boots the app under Xvfb and drives it
+npm run fixtures # regenerate the PDF fixtures in test/fixtures
+npm run dist     # package with electron-builder
+```
+
+The unit tests run against PDFs generated by `test/fixtures/make-pdf.mjs`, one
+plain and one carrying the layout cases that make segmentation hard. The e2e
+smoke test boots the real renderer, opens a fixture through the real IPC path
+and asserts on the live DOM — only the synthesiser is stubbed, since CI
+machines have no voices.
