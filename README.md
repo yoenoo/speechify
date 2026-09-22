@@ -10,6 +10,13 @@ is uploaded anywhere; the PDF never leaves your device.
 
 ![the reader highlighting a sentence and the word being spoken, on a phone-width layout](docs/reading.png)
 
+## Try it right now
+
+**[Open the live demo](https://claude.ai/artifact/FWKaHyUY6hP17ppT4VBL8D)** —
+no install, works on a phone. It's the same app published as a static page;
+see [`web/artifact/`](web/artifact) below for why that build differs slightly
+from running it yourself.
+
 ## Running it locally
 
 ```sh
@@ -102,6 +109,7 @@ web/
   index.html, mobile.css, app.js   the site itself — a touch-first layout
   build.mjs                        assembles web/dist/ (no bundler; plain ES modules)
   serve.mjs                        a tiny static server for local dev
+  artifact/                        a variant for the hosted demo link (below)
 test/
   *.test.mjs      unit tests over generated PDF fixtures
   e2e/web-smoke.js   boots the built site in a plain, unprivileged browser
@@ -127,6 +135,27 @@ browser at all.
 - **Nothing persists across devices.** Preferences (voice, speed, zoom) are
   saved to `localStorage` in the browser you're using; there's no account or
   sync.
+
+### About `web/artifact/`
+
+The hosted demo link above is published from `web/artifact/`, a small variant
+of the site needed only because of how that hosting works, not a different
+app:
+
+- pdf.js's worker script embeds raw binary payload inside its `.mjs` text,
+  which that host's file publishing rejects as non-text. It ships instead as
+  base64 (`worker-data.js`) and is turned back into a real script at runtime
+  via a `Blob` URL — see the comment in `web/artifact/app.js`.
+- CJK character maps, the base-14 Type1 font substitutes, and ICC profiles
+  (`.bcmap`/`.pfb`/`.icc`) aren't file types that host serves at all, so this
+  build ships without them. Ordinary PDFs with embedded or common Latin fonts
+  are unaffected; a PDF that specifically needs one of those (a non-Latin
+  script with no embedded font, an unusual base-14 substitution, precise color
+  management) may render text worse there than it does on `web/dist/`, which
+  ships all of it.
+
+Deploying `web/dist/` yourself (see above) sidesteps both of these — they are
+this particular hosting method's limits, not the app's.
 
 ## Development
 
