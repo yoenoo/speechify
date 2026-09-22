@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14161a" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob:; media-src 'self' blob:;"
+    />
+    <title>Speechify</title>
+    <link rel="stylesheet" href="./mobile.css" />
+  </head>
+  <body>
+    <header class="bar bar-top">
+      <label class="button" for="file">
+        <span aria-hidden="true">&#128194;</span><span class="button-text">Open</span>
+        <input id="file" type="file" accept="application/pdf,.pdf" hidden />
+      </label>
+      <span id="doc-title" class="doc-title">No document</span>
+      <button id="settings-toggle" class="button icon-button" type="button" aria-label="Voice settings">
+        &#9881;
+      </button>
+    </header>
+
+    <section id="settings" class="settings" hidden>
+      <label class="field">
+        <span class="field-label">Voice</span>
+        <select id="voice" class="select" disabled></select>
+      </label>
+      <label class="field">
+        <span class="field-label">Speed <output id="rate-value">1.0&times;</output></span>
+        <input id="rate" class="slider" type="range" min="0.5" max="3" step="0.05" value="1" />
+      </label>
+      <div class="field">
+        <span class="field-label">Zoom</span>
+        <div class="zoom">
+          <button id="zoom-out" class="button icon-button" type="button" aria-label="Zoom out">&minus;</button>
+          <button id="zoom-fit" class="button" type="button">Fit</button>
+          <button id="zoom-in" class="button icon-button" type="button" aria-label="Zoom in">+</button>
+        </div>
+      </div>
+    </section>
+
+    <main id="viewer" class="viewer">
+      <section id="empty-state" class="empty-state">
+        <h1>Read a PDF out loud</h1>
+        <p>
+          Pick a PDF and it is read aloud, with the current sentence highlighted and the word
+          being spoken marked inside it.
+        </p>
+        <label class="button primary large" for="file2">
+          Choose a PDF
+          <input id="file2" type="file" accept="application/pdf,.pdf" hidden />
+        </label>
+        <p class="hint">Tap any sentence to start reading from there.</p>
+        <p id="support" class="support"></p>
+      </section>
+    </main>
+
+    <footer class="bar bar-bottom">
+      <button id="previous" class="button icon-button" type="button" aria-label="Previous sentence" disabled>
+        &#9198;
+      </button>
+      <button id="play" class="button primary" type="button" disabled>
+        <span id="play-icon" aria-hidden="true">&#9654;</span><span id="play-label">Play</span>
+      </button>
+      <button id="next" class="button icon-button" type="button" aria-label="Next sentence" disabled>
+        &#9197;
+      </button>
+    </footer>
+
+    <div id="status" class="status" role="status" aria-live="polite">Loading…</div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -17,6 +17,7 @@ export class WebSpeechEngine {
   #userPaused = false;
   #pendingSpeak = [];
   #flushTimer = null;
+  #lastCancelAt = 0;
 
   constructor(synth = globalThis.speechSynthesis) {
     this.#synth = synth;
@@ -48,7 +49,14 @@ export class WebSpeechEngine {
         resolve(this.#synth?.getVoices() ?? []);
       };
 
-      const onChange = () => finish();
+      // `voiceschanged` can fire before any voice exists — Chromium announces
+      // an empty list once at startup, and Android fills the list in more than
+      // one batch. Resolving on the first event would strand the app with no
+      // voices, so only a non-empty list settles this early; otherwise the
+      // timeout decides, and reports whatever did arrive.
+      const onChange = () => {
+        if ((this.#synth?.getVoices() ?? []).length > 0) finish();
+      };
       const timer = setTimeout(finish, timeoutMs);
       this.#synth?.addEventListener?.('voiceschanged', onChange);
     });
@@ -92,23 +100,39 @@ export class WebSpeechEngine {
       onError?.({ error: event.error, message: event.message });
     };
 
-    // Chromium drops utterances queued in the same task as a `cancel()`, so a
-    // speak that closely follows one is deferred by a tick.
+    // Chromium drops utterances queued in the same task as a `cancel()` that
+    // actually interrupted something, so those are deferred by a tick.
+    //
+    // The deferral has to stay conditional: iOS Safari only unlocks audio when
+    // the first `speak()` happens synchronously inside the user gesture that
+    // asked for it, and `Reader.play()` always cancels before speaking. A
+    // cancel that had nothing to stop needs no settle time, so a fresh play
+    // still reaches the synthesiser within the tap that started it.
     this.#pendingSpeak.push(utterance);
-    this.#scheduleFlush();
+
+    if (Date.now() - this.#lastCancelAt < CANCEL_SETTLE_MS) this.#scheduleFlush();
+    else this.#flush();
+  }
+
+  #flush() {
+    const queued = this.#pendingSpeak;
+    this.#pendingSpeak = [];
+    for (const utterance of queued) this.#synth.speak(utterance);
   }
 
   #scheduleFlush() {
     if (this.#flushTimer !== null) return;
     this.#flushTimer = setTimeout(() => {
       this.#flushTimer = null;
-      const queued = this.#pendingSpeak;
-      this.#pendingSpeak = [];
-      for (const utterance of queued) this.#synth.speak(utterance);
+      this.#flush();
     }, CANCEL_SETTLE_MS);
   }
 
   cancel() {
+    // Only a cancel that interrupted real work needs the settle window above.
+    const interrupted = this.#pendingSpeak.length > 0 || Boolean(this.#synth?.speaking);
+    if (interrupted) this.#lastCancelAt = Date.now();
+
     this.#pendingSpeak = [];
     if (this.#flushTimer !== null) {
       clearTimeout(this.#flushTimer);

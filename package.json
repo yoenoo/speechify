@@ -1,65 +1,20 @@
 {
-  "name": "speechify-desktop",
+  "name": "speechify-web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A desktop app that reads PDFs aloud, highlighting each sentence and the word being spoken",
-  "main": "electron/main.js",
+  "description": "A website that reads a PDF aloud, highlighting each sentence and the word being spoken",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
+    "start": "npm run build:web && node web/serve.mjs",
+    "build:web": "node web/build.mjs",
     "test": "node --test test/*.test.mjs",
-    "test:e2e": "xvfb-run -a electron --no-sandbox test/e2e/smoke.js",
-    "fixtures": "node test/fixtures/make-pdf.mjs",
-    "dist": "electron-builder",
-    "pack": "electron-builder --dir"
+    "test:web": "node web/build.mjs && xvfb-run -a electron --no-sandbox test/e2e/web-smoke.js",
+    "fixtures": "node test/fixtures/make-pdf.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "^6.3.289"
   },
   "devDependencies": {
-    "electron": "^44.4.3",
-    "electron-builder": "^26.15.3"
-  },
-  "build": {
-    "appId": "dev.speechify.reader",
-    "productName": "Speechify",
-    "files": [
-      "electron/**/*",
-      "src/**/*",
-      "node_modules/pdfjs-dist/build/**/*",
-      "node_modules/pdfjs-dist/standard_fonts/**/*",
-      "node_modules/pdfjs-dist/cmaps/**/*",
-      "node_modules/pdfjs-dist/wasm/**/*",
-      "node_modules/pdfjs-dist/iccs/**/*",
-      "node_modules/pdfjs-dist/package.json",
-      "!**/*.map"
-    ],
-    "fileAssociations": [
-      {
-        "ext": "pdf",
-        "name": "PDF document",
-        "role": "Viewer"
-      }
-    ],
-    "mac": {
-      "category": "public.app-category.productivity",
-      "target": [
-        "dmg",
-        "zip"
-      ]
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ]
-    },
-    "linux": {
-      "category": "Office",
-      "target": [
-        "AppImage",
-        "deb"
-      ]
-    }
+    "electron": "^44.4.3"
   }
 }

@@ -72,6 +72,11 @@ export class Reader {
 
     this.#cancel();
     this.#index = target;
+    // Anchored to `target`, not the index #cancel() just left behind: the
+    // queue must resume filling from where we are jumping *to*, or a play()
+    // called from a distant position speaks everything in between before it
+    // ever reaches the sentence that was actually requested.
+    this.#queuedTo = target - 1;
     this.#retries = 0;
     this.#setState('playing');
     this.#emit('unit', { index: this.#index, unit: this.currentUnit });
@@ -143,7 +148,6 @@ export class Reader {
 
   #cancel() {
     this.#generation++;
-    this.#queuedTo = this.#index - 1;
     this.#engine.cancel();
     this.#stopWatchdog();
   }

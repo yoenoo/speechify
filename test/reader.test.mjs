@@ -269,3 +269,30 @@ test('setUnits stops playback and rewinds', () => {
   assert.equal(reader.index, 0);
   assert.equal(engine.pending.length, 0);
 });
+
+test('jumping straight to a distant sentence speaks that sentence first', () => {
+  // A regression test for a real bug: play() computed the queue's resume
+  // point from the *old* position instead of the target, so jumping far ahead
+  // (e.g. tapping a sentence near the end of the page) silently re-spoke every
+  // sentence in between, starting from wherever playback last left off,
+  // before ever reaching the one that was actually requested.
+  const { engine, reader } = setup(20);
+  reader.play(0);
+  engine.speakOne(); // advances the engine past sentence 0
+
+  reader.play(15);
+  const first = engine.startNext();
+
+  assert.equal(first.text, 'Sentence 15.', `expected to jump straight to 15, engine got "${first.text}"`);
+  assert.equal(reader.index, 15);
+});
+
+test('play() from a stopped state queues only the target and its lookahead', () => {
+  const { engine, reader } = setup(10);
+  reader.play(7);
+  assert.deepEqual(
+    engine.pending.map((u) => u.text),
+    ['Sentence 7.', 'Sentence 8.'],
+    'no earlier sentences should have been queued'
+  );
+});
